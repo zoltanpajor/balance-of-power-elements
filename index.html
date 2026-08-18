@@ -378,7 +378,11 @@ function getPlacementBlockReason(q, r, elKey, excludeKey) {
   const el = ELEMENTS.find((e) => e.key === elKey);
   const label = el ? el.label : elKey;
 
-  if (!(q === 0 && r === 0) && !hasPlacementSupport(q, r, excludeKey)) {
+  if (q === 0 && r === 0) {
+    return "Field elements can't be placed on the center hex";
+  }
+
+  if (!hasPlacementSupport(q, r, excludeKey)) {
     return "Field elements must be placed next to the center hex or another field element";
   }
 
