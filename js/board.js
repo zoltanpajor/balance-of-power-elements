@@ -7,7 +7,15 @@ const ELEMENTS = [
   { key: "metal", label: "Metal", icon: "⚙️" },
 ];
 
-const HEX_SIZE = 52; // circumradius in px, flat-top hexes
+// Circumradius in px, flat-top hexes. Shrinks on small screens so the board
+// fits without excessive scrolling.
+function getHexSize() {
+  if (window.innerWidth < 480) return 30;
+  if (window.innerWidth < 700) return 40;
+  return 52;
+}
+
+let HEX_SIZE = getHexSize();
 
 // A photo of the wise platypus, watching over the center hex.
 const PLATYPUS_IMG_SRC = "images/platypus.png";
@@ -157,9 +165,9 @@ function axialToPixel(q, r) {
   return { x, y };
 }
 
-function buildBoard() {
+function buildBoard(preserveState) {
   boardEl.innerHTML = "";
-  state.clear();
+  if (!preserveState) state.clear();
 
   const coords = [];
   for (let q = -boardRadius; q <= boardRadius; q++) {
@@ -197,7 +205,29 @@ function buildBoard() {
 
     boardEl.appendChild(hex);
   });
+
+  if (preserveState) {
+    for (const key of state.keys()) {
+      const [q, r] = key.split(",").map(Number);
+      renderHex(q, r);
+    }
+    updatePaletteAvailability();
+  }
 }
+
+let lastHexSize = HEX_SIZE;
+let resizeDebounce = null;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeDebounce);
+  resizeDebounce = setTimeout(() => {
+    const newSize = getHexSize();
+    if (newSize !== lastHexSize) {
+      lastHexSize = newSize;
+      HEX_SIZE = newSize;
+      buildBoard(true);
+    }
+  }, 150);
+});
 
 function placeToken(q, r, elKey) {
   state.set(hexKey(q, r), elKey);
