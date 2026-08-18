@@ -94,6 +94,8 @@ header h1 {
   cursor: grab;
   font-size: 1.6rem;
   user-select: none;
+  touch-action: none;
+  -webkit-touch-callout: none;
 }
 
 .token:active { cursor: grabbing; }
@@ -262,6 +264,8 @@ header h1 {
   font-size: 1.8rem;
   cursor: grab;
   user-select: none;
+  touch-action: none;
+  -webkit-touch-callout: none;
 }
 
 .hex .token-in-hex:active { cursor: grabbing; }
@@ -280,6 +284,8 @@ header h1 {
   z-index: 500;
   padding: 16px;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
 }
 
 .dice-scene {

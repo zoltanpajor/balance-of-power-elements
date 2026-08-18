@@ -271,6 +271,14 @@ function startDrag(e, payload, sourceEl) {
   if (e.button !== undefined && e.button !== 0) return;
   e.preventDefault();
 
+  if (e.target.setPointerCapture) {
+    try {
+      e.target.setPointerCapture(e.pointerId);
+    } catch (err) {
+      // Ignore — capture is a robustness aid, not required for the drag to work.
+    }
+  }
+
   const startX = e.clientX;
   const startY = e.clientY;
   let moved = false;
