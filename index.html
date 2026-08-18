@@ -213,6 +213,10 @@ header h1 {
   background: #33465e;
 }
 
+.hex.drag-invalid::after {
+  background: #4a2323;
+}
+
 .hex.hex-center::after {
   background: #f5f5f5;
 }
@@ -319,6 +323,40 @@ function countOnBoard(elKey) {
   let n = 0;
   for (const v of state.values()) if (v === elKey) n++;
   return n;
+}
+
+// Axial hex distance from the center (0,0).
+function hexDistance(q, r) {
+  return (Math.abs(q) + Math.abs(r) + Math.abs(q + r)) / 2;
+}
+
+const NEIGHBOR_DIRS = [
+  [1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1],
+];
+
+function neighborCoords(q, r) {
+  return NEIGHBOR_DIRS.map(([dq, dr]) => [q + dq, r + dr]);
+}
+
+// Ring 1 (the 6 hexes touching the center) may hold at most one of each
+// element, even if the matching hex isn't directly adjacent. Rings 2+ only
+// forbid the same element from sitting on two neighboring hexes.
+function canPlaceAt(q, r, elKey, excludeKey) {
+  if (hexDistance(q, r) === 1) {
+    for (const [key, v] of state.entries()) {
+      if (key === excludeKey) continue;
+      const [kq, kr] = key.split(",").map(Number);
+      if (hexDistance(kq, kr) === 1 && v === elKey) return false;
+    }
+  }
+
+  for (const [nq, nr] of neighborCoords(q, r)) {
+    const nKey = hexKey(nq, nr);
+    if (nKey === excludeKey) continue;
+    if (state.get(nKey) === elKey) return false;
+  }
+
+  return true;
 }
 
 function updatePaletteAvailability() {
@@ -485,11 +523,19 @@ function startDrag(e, payload, sourceEl) {
     ghost.style.display = "none";
     const target = document.elementFromPoint(ev.clientX, ev.clientY);
     ghost.style.display = "";
-    document.querySelectorAll(".hex.drag-over").forEach((h) => h.classList.remove("drag-over"));
+    document.querySelectorAll(".hex.drag-over, .hex.drag-invalid").forEach((h) =>
+      h.classList.remove("drag-over", "drag-invalid")
+    );
     trashEl.classList.remove("drag-over");
     if (!target) return;
     const hex = target.closest(".hex");
-    if (hex && !hex.querySelector(".token-in-hex")) hex.classList.add("drag-over");
+    if (hex && !hex.querySelector(".token-in-hex")) {
+      const tq = Number(hex.dataset.q);
+      const tr = Number(hex.dataset.r);
+      const excludeKey = payload.source === "hex" ? hexKey(payload.fromQ, payload.fromR) : null;
+      const valid = canPlaceAt(tq, tr, payload.elKey, excludeKey);
+      hex.classList.add(valid ? "drag-over" : "drag-invalid");
+    }
     if (target.closest("#trash")) trashEl.classList.add("drag-over");
   }
 
@@ -498,7 +544,9 @@ function startDrag(e, payload, sourceEl) {
     document.removeEventListener("pointerup", onUp);
 
     document.querySelectorAll(".hex.droppable").forEach((h) => h.classList.remove("droppable"));
-    document.querySelectorAll(".hex.drag-over").forEach((h) => h.classList.remove("drag-over"));
+    document.querySelectorAll(".hex.drag-over, .hex.drag-invalid").forEach((h) =>
+      h.classList.remove("drag-over", "drag-invalid")
+    );
     trashEl.classList.remove("drag-over");
 
     if (ghost) ghost.remove();
@@ -526,8 +574,11 @@ function startDrag(e, payload, sourceEl) {
 
     if (payload.source === "palette") {
       if (countOnBoard(payload.elKey) >= MAX_PER_ELEMENT) return;
+      if (!canPlaceAt(tq, tr, payload.elKey, null)) return;
       placeToken(tq, tr, payload.elKey);
     } else {
+      const fromKey = hexKey(payload.fromQ, payload.fromR);
+      if (!canPlaceAt(tq, tr, payload.elKey, fromKey)) return;
       removeToken(payload.fromQ, payload.fromR);
       placeToken(tq, tr, payload.elKey);
     }
