@@ -289,11 +289,13 @@ function startDrag(e, payload, sourceEl) {
     dragTooltipEl.style.display = "none";
     if (!target) return;
     const hex = target.closest(".hex");
-    if (hex && !hex.querySelector(".token-in-hex")) {
+    if (hex) {
       const tq = Number(hex.dataset.q);
       const tr = Number(hex.dataset.r);
+      const isOwnOrigin = payload.source === "hex" && tq === payload.fromQ && tr === payload.fromR;
+      const occupied = !!hex.querySelector(".token-in-hex") && !isOwnOrigin;
       const excludeKey = payload.source === "hex" ? hexKey(payload.fromQ, payload.fromR) : null;
-      const reason = getPlacementBlockReason(tq, tr, payload.elKey, excludeKey);
+      const reason = occupied ? "Field occupied" : getPlacementBlockReason(tq, tr, payload.elKey, excludeKey);
       hex.classList.add(reason ? "drag-invalid" : "drag-over");
       if (reason) {
         dragTooltipEl.textContent = reason;
