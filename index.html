@@ -47,6 +47,14 @@ header h1 {
   font-size: 0.9rem;
 }
 
+.version {
+  text-align: center;
+  padding: 8px 0 20px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+}
+
 .app {
   display: flex;
   gap: 20px;
@@ -276,7 +284,7 @@ header h1 {
 <body>
 <header>
   <h1>Balance of Power — Elements</h1>
-  <p class="subtitle">Hex board sandbox</p>
+  <p class="subtitle">Created by Wise Platypus</p>
 </header>
 
 <div class="app">
@@ -303,6 +311,8 @@ header h1 {
 </div>
 
 <div class="drag-tooltip" id="dragTooltip"></div>
+
+<footer class="version">v.0.001</footer>
 
 <script>
 const ELEMENTS = [
