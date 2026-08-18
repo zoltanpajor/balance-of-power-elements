@@ -289,12 +289,12 @@ header h1 {
       <label for="radiusInput">Radius</label>
       <input type="number" id="radiusInput" min="1" max="12" value="3">
       <button id="regenerateBtn">Regenerate</button>
-      <button id="clearBtn">Clear tokens</button>
+      <button id="clearBtn">Clear field elements</button>
     </div>
 
     <div class="trash" id="trash">🗑 Drop here to remove</div>
 
-    <p class="hint">Drag a token onto the board to place it. Drag a placed token to move it. Drag onto the trash — or click a token — to remove it.</p>
+    <p class="hint">Drag a field element onto the board to place it. Drag a placed field element to move it. Drag onto the trash — or click a field element — to remove it.</p>
   </aside>
 
   <main class="board-wrap">
@@ -371,7 +371,7 @@ function getPlacementBlockReason(q, r, elKey, excludeKey) {
       if (key === excludeKey) continue;
       const [kq, kr] = key.split(",").map(Number);
       if (hexDistance(kq, kr) === 1 && v === elKey) {
-        return `Ring 1 already has a ${label} token`;
+        return `Ring 1 already has a ${label} field element`;
       }
     }
   }
@@ -380,7 +380,7 @@ function getPlacementBlockReason(q, r, elKey, excludeKey) {
     const nKey = hexKey(nq, nr);
     if (nKey === excludeKey) continue;
     if (state.get(nKey) === elKey) {
-      return `${label} can't neighbor another ${label} token`;
+      return `${label} can't neighbor another ${label} field element`;
     }
   }
 
