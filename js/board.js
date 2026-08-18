@@ -310,6 +310,25 @@ function startDrag(e, payload, sourceEl) {
     }
   }
 
+  function showDragTooltip(text, x, y) {
+    dragTooltipEl.textContent = text;
+    dragTooltipEl.style.display = "block";
+
+    const margin = 8;
+    const rect = dragTooltipEl.getBoundingClientRect();
+
+    // Prefer showing the tooltip above the touch/cursor point so a finger
+    // dragging the token doesn't cover the text.
+    let left = x - rect.width / 2;
+    let top = y - rect.height - 22;
+
+    if (top < margin) top = y + 26;
+    left = Math.max(margin, Math.min(left, window.innerWidth - rect.width - margin));
+
+    dragTooltipEl.style.left = `${left}px`;
+    dragTooltipEl.style.top = `${top}px`;
+  }
+
   function positionGhost(ev) {
     const rect = sourceEl.getBoundingClientRect();
     ghost.style.left = `${ev.clientX - rect.width / 2}px`;
@@ -336,10 +355,7 @@ function startDrag(e, payload, sourceEl) {
       const reason = occupied ? "Field occupied" : getPlacementBlockReason(tq, tr, payload.elKey, excludeKey);
       hex.classList.add(reason ? "drag-invalid" : "drag-over");
       if (reason) {
-        dragTooltipEl.textContent = reason;
-        dragTooltipEl.style.display = "block";
-        dragTooltipEl.style.left = `${ev.clientX + 14}px`;
-        dragTooltipEl.style.top = `${ev.clientY + 18}px`;
+        showDragTooltip(reason, ev.clientX, ev.clientY);
       }
     }
     if (target.closest("#trash")) trashEl.classList.add("drag-over");
