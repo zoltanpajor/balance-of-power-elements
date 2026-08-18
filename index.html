@@ -83,6 +83,7 @@ header h1 {
 }
 
 .token {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -95,6 +96,24 @@ header h1 {
 }
 
 .token:active { cursor: grabbing; }
+
+.token-count {
+  position: absolute;
+  bottom: 14%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.6rem;
+  font-family: system-ui, sans-serif;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.token.token-full {
+  opacity: 0.35;
+  cursor: not-allowed;
+  filter: grayscale(60%);
+}
 
 .token.fire { background: var(--fire); }
 .token.ice { background: var(--ice); }
@@ -290,8 +309,27 @@ let boardRadius = parseInt(radiusInput.value, 10);
 // state[q,r] -> elementKey
 let state = new Map();
 
+const MAX_PER_ELEMENT = 6;
+
 function hexKey(q, r) {
   return `${q},${r}`;
+}
+
+function countOnBoard(elKey) {
+  let n = 0;
+  for (const v of state.values()) if (v === elKey) n++;
+  return n;
+}
+
+function updatePaletteAvailability() {
+  ELEMENTS.forEach((el) => {
+    const div = paletteEl.querySelector(`.token[data-key="${el.key}"]`);
+    if (!div) return;
+    const count = countOnBoard(el.key);
+    const full = count >= MAX_PER_ELEMENT;
+    div.classList.toggle("token-full", full);
+    div.querySelector(".token-count").textContent = `${count}/${MAX_PER_ELEMENT}`;
+  });
 }
 
 function buildPalette() {
@@ -299,11 +337,21 @@ function buildPalette() {
   ELEMENTS.forEach((el) => {
     const div = document.createElement("div");
     div.className = `token ${el.key}`;
+    div.dataset.key = el.key;
     div.title = el.label;
     div.textContent = el.icon;
-    div.addEventListener("pointerdown", (e) => startDrag(e, { source: "palette", elKey: el.key }, div));
+
+    const count = document.createElement("span");
+    count.className = "token-count";
+    div.appendChild(count);
+
+    div.addEventListener("pointerdown", (e) => {
+      if (div.classList.contains("token-full")) return;
+      startDrag(e, { source: "palette", elKey: el.key }, div);
+    });
     paletteEl.appendChild(div);
   });
+  updatePaletteAvailability();
 }
 
 function axialToPixel(q, r) {
@@ -357,11 +405,13 @@ function buildBoard() {
 function placeToken(q, r, elKey) {
   state.set(hexKey(q, r), elKey);
   renderHex(q, r);
+  updatePaletteAvailability();
 }
 
 function removeToken(q, r) {
   state.delete(hexKey(q, r));
   renderHex(q, r);
+  updatePaletteAvailability();
 }
 
 function renderHex(q, r) {
@@ -475,6 +525,7 @@ function startDrag(e, payload, sourceEl) {
     if (state.has(hexKey(tq, tr))) return; // occupied
 
     if (payload.source === "palette") {
+      if (countOnBoard(payload.elKey) >= MAX_PER_ELEMENT) return;
       placeToken(tq, tr, payload.elKey);
     } else {
       removeToken(payload.fromQ, payload.fromR);
