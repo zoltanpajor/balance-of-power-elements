@@ -275,8 +275,8 @@ header h1 {
 
 .dice-container {
   position: fixed;
-  top: 20px;
-  right: 24px;
+  top: 50px;
+  right: 50px;
   z-index: 500;
 }
 
