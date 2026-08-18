@@ -357,6 +357,18 @@ function neighborCoords(q, r) {
   return NEIGHBOR_DIRS.map(([dq, dr]) => [q + dq, r + dr]);
 }
 
+// A hex may only receive a field element if it neighbors the center hex or
+// an already-placed field element — the board grows outward from the center.
+function hasPlacementSupport(q, r, excludeKey) {
+  for (const [nq, nr] of neighborCoords(q, r)) {
+    if (nq === 0 && nr === 0) return true;
+    const nKey = hexKey(nq, nr);
+    if (nKey === excludeKey) continue;
+    if (state.has(nKey)) return true;
+  }
+  return false;
+}
+
 // Ring 1 (the 6 hexes touching the center) may hold at most one of each
 // element, even if the matching hex isn't directly adjacent. Rings 2+ only
 // forbid the same element from sitting on two neighboring hexes.
@@ -365,6 +377,10 @@ function neighborCoords(q, r) {
 function getPlacementBlockReason(q, r, elKey, excludeKey) {
   const el = ELEMENTS.find((e) => e.key === elKey);
   const label = el ? el.label : elKey;
+
+  if (!(q === 0 && r === 0) && !hasPlacementSupport(q, r, excludeKey)) {
+    return "Field elements must be placed next to the center hex or another field element";
+  }
 
   if (hexDistance(q, r) === 1) {
     for (const [key, v] of state.entries()) {
