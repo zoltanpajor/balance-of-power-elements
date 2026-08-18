@@ -357,16 +357,24 @@ function neighborCoords(q, r) {
   return NEIGHBOR_DIRS.map(([dq, dr]) => [q + dq, r + dr]);
 }
 
-// A hex may only receive a field element if it neighbors the center hex or
-// an already-placed field element — the board grows outward from the center.
-function hasPlacementSupport(q, r, excludeKey) {
+// The 6 hexes directly touching the center.
+const RING1_COORDS = neighborCoords(0, 0);
+
+function isRing1Full(excludeKey) {
+  return RING1_COORDS.every(([q, r]) => {
+    const key = hexKey(q, r);
+    return key !== excludeKey && state.has(key);
+  });
+}
+
+function neighborSupportCount(q, r, excludeKey) {
+  let n = 0;
   for (const [nq, nr] of neighborCoords(q, r)) {
-    if (nq === 0 && nr === 0) return true;
     const nKey = hexKey(nq, nr);
     if (nKey === excludeKey) continue;
-    if (state.has(nKey)) return true;
+    if (state.has(nKey)) n++;
   }
-  return false;
+  return n;
 }
 
 // Ring 1 (the 6 hexes touching the center) may hold at most one of each
@@ -377,16 +385,22 @@ function hasPlacementSupport(q, r, excludeKey) {
 function getPlacementBlockReason(q, r, elKey, excludeKey) {
   const el = ELEMENTS.find((e) => e.key === elKey);
   const label = el ? el.label : elKey;
+  const dist = hexDistance(q, r);
 
   if (q === 0 && r === 0) {
     return "Field elements can't be placed on the center hex";
   }
 
-  if (!hasPlacementSupport(q, r, excludeKey)) {
-    return "Field elements must be placed next to the center hex or another field element";
+  if (dist > 1) {
+    if (!isRing1Full(excludeKey)) {
+      return "Ring 1 must be completely filled (one of each element) before placing further out";
+    }
+    if (neighborSupportCount(q, r, excludeKey) < 2) {
+      return "Field elements beyond ring 1 must neighbor at least 2 other field elements";
+    }
   }
 
-  if (hexDistance(q, r) === 1) {
+  if (dist === 1) {
     for (const [key, v] of state.entries()) {
       if (key === excludeKey) continue;
       const [kq, kr] = key.split(",").map(Number);
