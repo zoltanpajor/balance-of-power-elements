@@ -278,12 +278,15 @@ header h1 {
   top: 50px;
   right: 50px;
   z-index: 500;
+  padding: 16px;
+  cursor: pointer;
 }
 
 .dice-scene {
   width: 64px;
   height: 64px;
   perspective: 400px;
+  pointer-events: none;
 }
 
 .dice {
@@ -291,12 +294,11 @@ header h1 {
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  cursor: pointer;
   transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
   transform: rotateX(-15deg) rotateY(25deg);
 }
 
-.dice:active {
+.dice-container:active .dice {
   filter: brightness(0.95);
 }
 
