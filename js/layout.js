@@ -13,11 +13,11 @@ function updateLayoutToggleUI() {
   const btn = document.getElementById("layoutToggle");
   if (!btn) return;
   if (currentLayout === "mobile") {
-    btn.textContent = "📱";
-    btn.title = "Mobile layout — tap to switch to Desktop";
-  } else {
     btn.textContent = "🖥️";
-    btn.title = "Desktop layout — tap to switch to Mobile";
+    btn.title = "Switch to desktop layout";
+  } else {
+    btn.textContent = "📱";
+    btn.title = "Switch to mobile layout";
   }
 }
 
