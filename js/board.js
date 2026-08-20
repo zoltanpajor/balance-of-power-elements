@@ -23,7 +23,6 @@ const PLATYPUS_HTML = `<img class="platypus-icon" src="${PLATYPUS_IMG_SRC}" alt=
 const boardEl = document.getElementById("board");
 const paletteEl = document.getElementById("tokenPalette");
 const clearBtn = document.getElementById("clearBtn");
-const trashEl = document.getElementById("trash");
 const dragTooltipEl = document.getElementById("dragTooltip");
 
 const boardRadius = 3;
@@ -132,6 +131,134 @@ function updatePaletteAvailability() {
     div.classList.toggle("token-full", full);
     div.querySelector(".token-count").textContent = `${count}/${MAX_PER_ELEMENT}`;
   });
+  updateStartGameAvailability();
+}
+
+const BOARD_STATE_STORAGE_KEY = "balanceOfPowerBoardState";
+
+function isBoardComplete() {
+  return ELEMENTS.every((el) => countOnBoard(el.key) === MAX_PER_ELEMENT);
+}
+
+function updateStartGameAvailability() {
+  const btn = document.getElementById("startGameBtn");
+  if (!btn) return;
+  btn.disabled = !isBoardComplete();
+}
+
+const startGameBtn = document.getElementById("startGameBtn");
+if (startGameBtn) {
+  startGameBtn.addEventListener("click", () => {
+    if (!isBoardComplete()) return;
+    sessionStorage.setItem(BOARD_STATE_STORAGE_KEY, JSON.stringify(Array.from(state.entries())));
+    window.location.href = "game.html";
+  });
+}
+
+function shuffled(array) {
+  const arr = array.slice();
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// Finds a random full board assignment (every non-center hex filled, 6 of
+// each element) that satisfies the same placement rules as manual play:
+// no two neighboring hexes share an element, and ring 1 holds one of each.
+function generateRandomValidBoard() {
+  const coords = [];
+  for (let q = -boardRadius; q <= boardRadius; q++) {
+    const r1 = Math.max(-boardRadius, -q - boardRadius);
+    const r2 = Math.min(boardRadius, -q + boardRadius);
+    for (let r = r1; r <= r2; r++) {
+      if (q === 0 && r === 0) continue;
+      coords.push([q, r]);
+    }
+  }
+  coords.sort((a, b) => hexDistance(a[0], a[1]) - hexDistance(b[0], b[1]));
+
+  const keys = ELEMENTS.map((el) => el.key);
+  const assignment = new Map();
+  const counts = {};
+  keys.forEach((k) => (counts[k] = 0));
+
+  function ring1UsedColors() {
+    const used = new Set();
+    for (const [key, color] of assignment) {
+      const [kq, kr] = key.split(",").map(Number);
+      if (hexDistance(kq, kr) === 1) used.add(color);
+    }
+    return used;
+  }
+
+  function solve(i) {
+    if (i === coords.length) return true;
+    const [q, r] = coords[i];
+    const blocked = new Set();
+    for (const [nq, nr] of neighborCoords(q, r)) {
+      const nKey = hexKey(nq, nr);
+      if (assignment.has(nKey)) blocked.add(assignment.get(nKey));
+    }
+    if (hexDistance(q, r) === 1) {
+      for (const c of ring1UsedColors()) blocked.add(c);
+    }
+    const candidates = shuffled(keys).filter((c) => !blocked.has(c) && counts[c] < MAX_PER_ELEMENT);
+    for (const c of candidates) {
+      const key = hexKey(q, r);
+      assignment.set(key, c);
+      counts[c]++;
+      if (solve(i + 1)) return true;
+      counts[c]--;
+      assignment.delete(key);
+    }
+    return false;
+  }
+
+  return solve(0) ? assignment : null;
+}
+
+function runGenerateBoard() {
+  const result = generateRandomValidBoard();
+  if (!result) {
+    alert("Couldn't generate a valid board — please try again.");
+    return;
+  }
+  Array.from(state.keys()).forEach((key) => {
+    const [q, r] = key.split(",").map(Number);
+    removeToken(q, r);
+  });
+  for (const [key, color] of result) {
+    const [q, r] = key.split(",").map(Number);
+    placeToken(q, r, color);
+  }
+}
+
+const generateBoardBtn = document.getElementById("generateBoardBtn");
+const generateConfirmOverlay = document.getElementById("generateConfirmOverlay");
+const generateConfirmYes = document.getElementById("generateConfirmYes");
+const generateConfirmNo = document.getElementById("generateConfirmNo");
+
+if (generateBoardBtn && generateConfirmOverlay) {
+  generateBoardBtn.addEventListener("click", () => {
+    generateConfirmOverlay.classList.add("open");
+  });
+
+  generateConfirmYes.addEventListener("click", () => {
+    generateConfirmOverlay.classList.remove("open");
+    runGenerateBoard();
+  });
+
+  generateConfirmNo.addEventListener("click", () => {
+    generateConfirmOverlay.classList.remove("open");
+  });
+
+  generateConfirmOverlay.addEventListener("click", (e) => {
+    if (e.target === generateConfirmOverlay) {
+      generateConfirmOverlay.classList.remove("open");
+    }
+  });
 }
 
 function buildPalette() {
@@ -141,7 +268,6 @@ function buildPalette() {
     div.className = `token ${el.key}`;
     div.dataset.key = el.key;
     div.title = el.label;
-    div.textContent = el.icon;
 
     const count = document.createElement("span");
     count.className = "token-count";
@@ -246,7 +372,6 @@ function renderHex(q, r) {
   const el = ELEMENTS.find((e) => e.key === elKey);
   const tokenEl = document.createElement("div");
   tokenEl.className = `token-in-hex ${elKey}`;
-  tokenEl.textContent = el.icon;
   tokenEl.title = el.label;
 
   tokenEl.addEventListener("pointerdown", (e) =>
@@ -345,7 +470,6 @@ function startDrag(e, payload, sourceEl) {
     document.querySelectorAll(".hex.drag-over, .hex.drag-invalid").forEach((h) =>
       h.classList.remove("drag-over", "drag-invalid")
     );
-    trashEl.classList.remove("drag-over");
     dragTooltipEl.style.display = "none";
     dragTooltipEl.classList.remove("drag-tooltip-banner");
     if (!target) return;
@@ -361,8 +485,9 @@ function startDrag(e, payload, sourceEl) {
       if (reason) {
         showDragTooltip(reason, ev.clientX, ev.clientY);
       }
+    } else if (payload.source === "hex" && !target.closest(".board-wrap")) {
+      showDragTooltip("Drop here to remove", ev.clientX, ev.clientY);
     }
-    if (target.closest("#trash")) trashEl.classList.add("drag-over");
   }
 
   function endDrag(ev) {
@@ -373,7 +498,6 @@ function startDrag(e, payload, sourceEl) {
     document.querySelectorAll(".hex.drag-over, .hex.drag-invalid").forEach((h) =>
       h.classList.remove("drag-over", "drag-invalid")
     );
-    trashEl.classList.remove("drag-over");
     dragTooltipEl.style.display = "none";
     dragTooltipEl.classList.remove("drag-tooltip-banner");
 
@@ -381,7 +505,6 @@ function startDrag(e, payload, sourceEl) {
     sourceEl.style.visibility = "";
 
     if (!moved) {
-      if (payload.source === "hex") removeToken(payload.fromQ, payload.fromR);
       return;
     }
 
@@ -389,13 +512,14 @@ function startDrag(e, payload, sourceEl) {
     const target = document.elementFromPoint(ev.clientX, ev.clientY);
     if (!target) return;
 
-    if (target.closest("#trash")) {
-      if (payload.source === "hex") removeToken(payload.fromQ, payload.fromR);
+    const hexTarget = target.closest(".hex");
+    if (!hexTarget) {
+      // Dropped a placed field element outside the board entirely — remove it.
+      if (payload.source === "hex" && !target.closest(".board-wrap")) {
+        removeToken(payload.fromQ, payload.fromR);
+      }
       return;
     }
-
-    const hexTarget = target.closest(".hex");
-    if (!hexTarget) return;
     const tq = Number(hexTarget.dataset.q);
     const tr = Number(hexTarget.dataset.r);
     if (state.has(hexKey(tq, tr))) return; // occupied

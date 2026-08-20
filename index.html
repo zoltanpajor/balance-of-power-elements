@@ -9,23 +9,9 @@
 <body>
 <header>
   <h1>Balance of Power — Elements</h1>
-  <p class="subtitle">Created by Wise Platypus</p>
 </header>
 
 <button class="layout-toggle" id="layoutToggle" aria-label="Switch layout"></button>
-
-<div class="dice-container" id="diceContainer" title="Click to roll">
-  <div class="dice-scene">
-    <div class="dice" id="dice">
-      <div class="dice-face face-1"><span class="pip"></span></div>
-      <div class="dice-face face-2"><span class="pip"></span><span class="pip"></span></div>
-      <div class="dice-face face-3"><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-      <div class="dice-face face-4"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-      <div class="dice-face face-5"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-      <div class="dice-face face-6"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-    </div>
-  </div>
-</div>
 
 <div class="app">
   <aside class="palette">
@@ -34,12 +20,35 @@
 
     <h2>Board</h2>
     <div class="controls">
-      <button id="clearBtn">Clear field elements</button>
+      <button id="clearBtn">Clear board</button>
+
+      <div class="dice-container" id="diceContainer" title="Click to roll">
+        <div class="dice-scene">
+          <div class="dice" id="dice">
+            <div class="dice-face face-1"><span class="pip"></span></div>
+            <div class="dice-face face-2"><span class="pip"></span><span class="pip"></span></div>
+            <div class="dice-face face-3"><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <div class="dice-face face-4"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <div class="dice-face face-5"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <div class="dice-face face-6"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="trash" id="trash">🗑 Drop here to remove</div>
+    <p class="hint">Drag a field element onto the board to place it. Drag a placed field element to move it. Drag it off the board to remove it.</p>
 
-    <p class="hint">Drag a field element onto the board to place it. Drag a placed field element to move it. Drag onto the trash — or click a field element — to remove it.</p>
+    <details class="rules">
+      <summary aria-label="Rules" title="Rules">ℹ️</summary>
+      <ul>
+        <li>Each element can be placed up to 6 times on the board.</li>
+        <li>The center hex can't hold a field element.</li>
+        <li>Ring 1 (the 6 hexes touching the center) can hold at most one of each element.</li>
+        <li>No two neighboring hexes can hold the same element.</li>
+        <li>Ring 1 must be completely filled before you can place further out.</li>
+        <li>Beyond ring 1, a new field element must neighbor at least 2 existing field elements.</li>
+      </ul>
+    </details>
   </aside>
 
   <main class="board-wrap">
@@ -49,7 +58,25 @@
 
 <div class="drag-tooltip" id="dragTooltip"></div>
 
-<footer class="version">v.0.001</footer>
+<div class="modal-overlay" id="generateConfirmOverlay">
+  <div class="modal-box">
+    <p>Instead of simulating board setup - you are generating an automated board setup!</p>
+    <div class="modal-actions">
+      <button id="generateConfirmNo" class="modal-btn modal-btn-secondary">No</button>
+      <button id="generateConfirmYes" class="modal-btn modal-btn-primary">Yes</button>
+    </div>
+  </div>
+</div>
+
+<div id="d2" class="banner-container">
+  <div class="game-actions">
+    <button id="generateBoardBtn" class="generate-board">🎲 Generate Board</button>
+    <button id="startGameBtn" class="start-game" disabled>Start Game</button>
+    <p class="start-game-hint" id="startGameHint">Place all 36 field elements (6 of each) to start.</p>
+  </div>
+</div>
+
+<footer class="version">Created by Wise Platypus — v.0.001</footer>
 
 <script src="js/layout.js"></script>
 <script src="js/board.js"></script>
