@@ -408,6 +408,7 @@ body.layout-mobile .subtitle {
 
 body.layout-mobile .app {
   flex-direction: column;
+  align-items: center;
   padding: 12px 12px 24px;
   gap: 14px;
 }
@@ -415,8 +416,13 @@ body.layout-mobile .app {
 body.layout-mobile .palette {
   flex: none;
   width: 100%;
+  max-width: 480px;
   position: static;
   padding: 12px;
+}
+
+body.layout-mobile .board-wrap {
+  max-width: 480px;
 }
 
 body.layout-mobile .tokens {
