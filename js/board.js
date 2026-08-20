@@ -309,6 +309,16 @@ function startDrag(e, payload, sourceEl) {
     dragTooltipEl.textContent = text;
     dragTooltipEl.style.display = "block";
 
+    // On mobile, a finger covers most of the nearby screen, so pin the
+    // message to a fixed banner at the top instead of following the touch.
+    if (document.body.classList.contains("layout-mobile")) {
+      dragTooltipEl.classList.add("drag-tooltip-banner");
+      dragTooltipEl.style.left = "";
+      dragTooltipEl.style.top = "";
+      return;
+    }
+    dragTooltipEl.classList.remove("drag-tooltip-banner");
+
     const margin = 8;
     const rect = dragTooltipEl.getBoundingClientRect();
 
@@ -339,6 +349,7 @@ function startDrag(e, payload, sourceEl) {
     );
     trashEl.classList.remove("drag-over");
     dragTooltipEl.style.display = "none";
+    dragTooltipEl.classList.remove("drag-tooltip-banner");
     if (!target) return;
     const hex = target.closest(".hex");
     if (hex) {
@@ -366,6 +377,7 @@ function startDrag(e, payload, sourceEl) {
     );
     trashEl.classList.remove("drag-over");
     dragTooltipEl.style.display = "none";
+    dragTooltipEl.classList.remove("drag-tooltip-banner");
 
     if (ghost) ghost.remove();
     sourceEl.style.visibility = "";

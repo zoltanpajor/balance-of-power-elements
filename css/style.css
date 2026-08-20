@@ -193,6 +193,15 @@ header h1 {
   display: none;
 }
 
+.drag-tooltip-banner {
+  top: 12px !important;
+  left: 50% !important;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  font-size: 0.85rem;
+  padding: 8px 14px;
+}
+
 .hint {
   margin-top: 16px;
   font-size: 0.78rem;
