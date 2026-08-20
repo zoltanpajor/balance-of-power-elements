@@ -132,21 +132,6 @@ header h1 {
   align-items: center;
 }
 
-.controls label {
-  font-size: 0.85rem;
-  color: var(--muted);
-  width: 100%;
-}
-
-.controls input[type="number"] {
-  width: 70px;
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: #1a1c22;
-  color: var(--text);
-}
-
 .controls button {
   padding: 6px 10px;
   border-radius: 6px;

@@ -22,13 +22,11 @@ const PLATYPUS_HTML = `<img class="platypus-icon" src="${PLATYPUS_IMG_SRC}" alt=
 
 const boardEl = document.getElementById("board");
 const paletteEl = document.getElementById("tokenPalette");
-const radiusInput = document.getElementById("radiusInput");
-const regenerateBtn = document.getElementById("regenerateBtn");
 const clearBtn = document.getElementById("clearBtn");
 const trashEl = document.getElementById("trash");
 const dragTooltipEl = document.getElementById("dragTooltip");
 
-let boardRadius = parseInt(radiusInput.value, 10);
+const boardRadius = 3;
 // state[q,r] -> elementKey
 let state = new Map();
 
@@ -421,13 +419,6 @@ function startDrag(e, payload, sourceEl) {
   document.addEventListener("pointermove", onMove);
   document.addEventListener("pointerup", onUp);
 }
-
-regenerateBtn.addEventListener("click", () => {
-  const val = parseInt(radiusInput.value, 10);
-  boardRadius = Number.isFinite(val) && val > 0 ? val : 6;
-  radiusInput.value = boardRadius;
-  buildBoard();
-});
 
 clearBtn.addEventListener("click", () => {
   const keys = Array.from(state.keys());
