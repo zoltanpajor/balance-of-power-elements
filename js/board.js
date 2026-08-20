@@ -7,12 +7,11 @@ const ELEMENTS = [
   { key: "metal", label: "Metal", icon: "⚙️" },
 ];
 
-// Circumradius in px, flat-top hexes. Shrinks on small screens so the board
-// fits without excessive scrolling.
+// Circumradius in px, flat-top hexes. Smaller in the mobile layout so the
+// board fits without excessive scrolling. The active layout ("layout-mobile"
+// vs default) is controlled by the layout selector in layout.js.
 function getHexSize() {
-  if (window.innerWidth < 480) return 30;
-  if (window.innerWidth < 700) return 40;
-  return 52;
+  return document.body.classList.contains("layout-mobile") ? 40 : 52;
 }
 
 let HEX_SIZE = getHexSize();
@@ -215,19 +214,15 @@ function buildBoard(preserveState) {
   }
 }
 
-let lastHexSize = HEX_SIZE;
-let resizeDebounce = null;
-window.addEventListener("resize", () => {
-  clearTimeout(resizeDebounce);
-  resizeDebounce = setTimeout(() => {
-    const newSize = getHexSize();
-    if (newSize !== lastHexSize) {
-      lastHexSize = newSize;
-      HEX_SIZE = newSize;
-      buildBoard(true);
-    }
-  }, 150);
-});
+// Called by layout.js whenever the user switches layouts, so the board
+// re-renders at the right hex size without losing placed field elements.
+function applyLayoutHexSize() {
+  const newSize = getHexSize();
+  if (newSize !== HEX_SIZE) {
+    HEX_SIZE = newSize;
+    buildBoard(true);
+  }
+}
 
 function placeToken(q, r, elKey) {
   state.set(hexKey(q, r), elKey);
